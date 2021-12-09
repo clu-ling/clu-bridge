@@ -1,12 +1,12 @@
 from __future__ import annotations
+from clu.bridge.typing import Tokens, Indices
 from enum import Enum
-from typing import Dict, List, Optional, Text, Tuple
+from typing import Dict, ForwardRef, List, Optional, Text, Tuple
 from pydantic import BaseModel, Extra, Field, PrivateAttr, validate_arguments
 
 __all__ = ["Document", "Sentence", "DirectedGraph", "Graphs", "Edge"]
 
-Tokens = List[Text]
-Indices = List[int]
+GraphMap = Dict[ForwardRef("Graphs"), ForwardRef("DirectedGraph")]
 
 # see https://github.com/clulab/processors/blob/master/main/src/main/scala/org/clulab/struct/GraphMap.scala
 class Graphs(Text, Enum):
@@ -30,14 +30,14 @@ class DirectedGraph(BaseModel):
 class Sentence(BaseModel):
   raw: Tokens
   words: Tokens
-  tags: Optional[Tokens]
-  lemmas: Optional[Tokens]
-  entities: Optional[Tokens]
-  chunks: Optional[Tokens]
-  norms: Optional[Tokens]
-  startOffsets: Indices
-  endOffsets: Indices
-  graphs: Optional[Dict[Graphs, DirectedGraph]]
+  tags: Optional[Tokens] = None
+  lemmas: Optional[Tokens] = None
+  entities: Optional[Tokens] = None
+  chunks: Optional[Tokens] = None
+  norms: Optional[Tokens] = None
+  startOffsets: Optional[Indices] = None
+  endOffsets: Optional[Indices] = None
+  graphs: Optional[Dict[Graphs, DirectedGraph]] = None
   # tell pydantic to use enum *values*
   class Config:
       use_enum_values = True
@@ -47,8 +47,8 @@ class Sentence(BaseModel):
 
 class Document(BaseModel):
   """clu.processors.Document"""
-  id: Optional[Text]
-  text: Optional[Text]
+  id: Optional[Text] = None
+  text: Optional[Text] = None
   sentences: List[Sentence]
   class Config:
       use_enum_values = True

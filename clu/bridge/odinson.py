@@ -1,13 +1,12 @@
 from __future__ import annotations
+from clu.bridge.typing import Tokens
 from enum import Enum
-from typing import List, Literal, Set, Text, Tuple, Type
+from typing import List, Literal, Set, Text, Tuple, Type, Union
 import abc
 from pydantic import BaseModel
 import pydantic
 
-__all__ = ["Document"]
-
-Tokens = List[Text]
+__all__ = ["Document", "AnyField"]
 
 class Fields(Text, Enum):
   # $type      ai.lum.odinson.*
@@ -17,53 +16,49 @@ class Fields(Text, Enum):
   DATE_FIELD = "ai.lum.odinson.DateField"
   NUMBER_FIELD = "ai.lum.odinson.NumberField"
   NESTED_FIELD = "ai.lum.odinson.NestedField"
-  #$type": "ai.lum.odinson.TokensField",
 
-class Field(BaseModel, abc.ABC):
+class Field(BaseModel):
   name: Text
   type: Fields = pydantic.Field(alias="$type", default="ai.lum.odinson.Field")
-  # def toJson: String = write(this)
-  # def toPrettyJson: String = write(this, indent = 4)
   class Config:
       use_enum_values = True
 
 class TokensField(Field):
-  name: Text
   tokens: Tokens
-  type: Literal[Fields.TOKENS_FIELD]
+  type: Literal[Fields.TOKENS_FIELD] = pydantic.Field(alias="$type", default=Fields.TOKENS_FIELD)
 
 class GraphField(Field):
-  name: Text
   edges: List[Tuple[int, int, Text]]
   roots: Set[int]
-  type: Literal[Fields.GRAPH_FIELD]
+  type: Literal[Fields.GRAPH_FIELD] = pydantic.Field(alias="$type", default=Fields.GRAPH_FIELD)
 
 class StringField(Field):
-  name: Text
   string: Text
-  type: Literal[Fields.STRING_FIELD]
+  type: Literal[Fields.STRING_FIELD] = pydantic.Field(alias="$type", default=Fields.STRING_FIELD)
 
 class DateField(Field):
-  name: Text
   date: Text
-  type: Literal[Fields.DATE_FIELD]
+  type: Literal[Fields.DATE_FIELD] = pydantic.Field(alias="$type", default=Fields.DATE_FIELD)
 
 class NumberField(Field):
-  name: Text
   value: float
-  type: Literal[Fields.NUMBER_FIELD]
+  type: Literal[Fields.NUMBER_FIELD] = pydantic.Field(alias="$type", default=Fields.NUMBER_FIELD)
 
 class NestedField(Field):
-  name: Text
-  fields: List[Field]
-  type: Literal[Fields.NESTED_FIELD]
 
+  fields: List[Type[Field]]
+  type: Literal[Fields.NESTED_FIELD] = pydantic.Field(alias="$type", default=Fields.NESTED_FIELD)
+
+AnyField = Union[TokensField, GraphField, StringField, DateField, NumberField, NestedField]
 class Sentence(BaseModel):
   numTokens: int
-  fields: List[Field]
+  # FIXME: figure out how to just use List[Type[Field]]
+  fields: List[AnyField]
 
 class Document(BaseModel):
-  """clu.processors.Document"""
+  """ai.lum.odinson.Document"""
   id: Text
-  metadata: List[Field]
+  # FIXME: figure out how to just use List[Type[Field]]
+  #metadata: List[AnyField] = []
+  metadata: List[AnyField]
   sentences: List[Sentence]
