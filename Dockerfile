@@ -20,14 +20,14 @@ RUN apt -y update && \
 # Install python dependencies
 RUN pip install -U pip
 
-# {deps not in requirements.txt}
+# Deps not in requirements.txt
 
 # Jupyter deps
 RUN pip install -U jupyter==1.0.0 jupyter-contrib-nbextensions==0.5.1 && \
     jupyter contrib nbextension install --user
 # Commonly used test utils
 RUN pip install -U pytest==5.3.4
-# Assignment-specific deps
+# Project-specific deps
 RUN pip install -e ".[all]"
 
 # Launch jupyter
