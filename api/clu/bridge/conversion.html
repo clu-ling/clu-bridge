@@ -23,6 +23,112 @@
 <h1 class="title">Module <code>clu.bridge.conversion</code></h1>
 </header>
 <section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">from __future__ import annotations
+from clu.bridge import processors
+from clu.bridge import odinson
+from clu.bridge.typing import Tokens, Indices
+
+from enum import Enum
+from typing import Dict, List, Literal, Optional, Set, Text, Tuple, Type
+import abc
+
+
+__all__ = [&#34;ConversionUtils&#34;]
+class ConversionUtils:
+  &#34;&#34;&#34;Conversion utilities for greater CLU family docs&#34;&#34;&#34;
+  
+  @staticmethod
+  def to_odinson(doc: processors.Document) -&gt; odinson.Document:
+    pass
+
+  @staticmethod
+  def to_odinson_sentence(s: processors.Sentence) -&gt; odinson.Sentence:
+    pass
+
+  @staticmethod
+  def to_processors(doc: odinson.Document) -&gt; processors.Document:
+    return processors.Document(
+      id = doc.id,
+      sentences = [ConversionUtils.to_processors_sentence(s) for s in doc.sentences]
+    )
+
+  @staticmethod
+  def create_character_offsets(toks: Tokens) -&gt; Tuple[Indices, Indices]:
+    &#34;&#34;&#34;Create start and end char offsets for tokens by treating them as whitespace-delimited&#34;&#34;&#34;
+    current_start = -1
+    current_end = 0
+    start_offsets = []
+    end_offsets = []
+    for tok in toks:
+      current_start += 1
+      start_offsets.append(current_start)
+      current_start += len(tok)
+      current_end += len(tok)
+      end_offsets.append(current_end)
+      current_end += 1
+    return start_offsets, end_offsets
+
+
+  @staticmethod
+  def to_processors_sentence(s: odinson.Sentence) -&gt; processors.Sentence:
+
+    graphs: Optional[processors.GraphMap] = None
+    # NOTE: by convention, these are non-plural
+    fields_dict: Dict[Text, Optional[Tokens]] = {
+      &#34;raw&#34; : None,
+      &#34;word&#34; : None,
+      &#34;tag&#34; : None,
+      &#34;lemma&#34; : None,
+      &#34;entity&#34; : None,
+      &#34;chunk&#34; : None,
+      &#34;norm&#34; : None
+    }
+
+    def is_token_field(field: odinson.Field, name: Optional[odinson.Fields] = None) -&gt; bool:
+      _is_token_field = isinstance(field, odinson.TokensField)
+      if name is not None:
+        return True if _is_token_field and field.name == name else False
+      return _is_token_field
+    
+
+    for field in s.fields:
+      if is_token_field(field) and field.name in fields_dict:
+        fields_dict[field.name] = field.tokens
+      elif isinstance(field, odinson.GraphField):
+        # assume graph is hybrid
+        graphs = graphs or dict()
+        graphs[processors.Graphs.HYBRID_DEPENDENCIES] = processors.DirectedGraph(
+          edges = [processors.Edge(source=e[0], destination=e[1], relation=e[2]) for e in field.edges],
+          roots = list(field.roots)
+        )
+
+    PLACEHOLDER = [&#34;&#34;] * s.numTokens
+    raw = fields_dict.get(&#34;raw&#34;, PLACEHOLDER) or fields_dict.get(&#34;word&#34;, PLACEHOLDER) or PLACEHOLDER
+    start_offsets, end_offsets = ConversionUtils.create_character_offsets(raw)
+    return processors.Sentence(
+      raw = raw,
+      startOffsets = start_offsets,
+      endOffsets = end_offsets,
+      words = fields_dict.get(&#34;word&#34;, PLACEHOLDER) or PLACEHOLDER,
+      tags = fields_dict.get(&#34;tag&#34;, None),
+      lemmas = fields_dict.get(&#34;lemma&#34;, None),
+      entities = fields_dict.get(&#34;entity&#34;, None),
+      chunks= fields_dict.get(&#34;chunk&#34;, None),
+      norms = fields_dict.get(&#34;norm&#34;, None),
+      graphs = graphs
+    )
+
+
+#   /** Start character offsets for the raw tokens; start at 0 */
+#   val startOffsets: Array[Int],
+#   /** End character offsets for the raw tokens; start at 0 */
+#   val endOffsets: Array[Int],
+# exclude_none=True</code></pre>
+</details>
 </section>
 <section>
 </section>
@@ -31,6 +137,236 @@
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="clu.bridge.conversion.ConversionUtils"><code class="flex name class">
+<span>class <span class="ident">ConversionUtils</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Conversion utilities for greater CLU family docs</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ConversionUtils:
+  &#34;&#34;&#34;Conversion utilities for greater CLU family docs&#34;&#34;&#34;
+  
+  @staticmethod
+  def to_odinson(doc: processors.Document) -&gt; odinson.Document:
+    pass
+
+  @staticmethod
+  def to_odinson_sentence(s: processors.Sentence) -&gt; odinson.Sentence:
+    pass
+
+  @staticmethod
+  def to_processors(doc: odinson.Document) -&gt; processors.Document:
+    return processors.Document(
+      id = doc.id,
+      sentences = [ConversionUtils.to_processors_sentence(s) for s in doc.sentences]
+    )
+
+  @staticmethod
+  def create_character_offsets(toks: Tokens) -&gt; Tuple[Indices, Indices]:
+    &#34;&#34;&#34;Create start and end char offsets for tokens by treating them as whitespace-delimited&#34;&#34;&#34;
+    current_start = -1
+    current_end = 0
+    start_offsets = []
+    end_offsets = []
+    for tok in toks:
+      current_start += 1
+      start_offsets.append(current_start)
+      current_start += len(tok)
+      current_end += len(tok)
+      end_offsets.append(current_end)
+      current_end += 1
+    return start_offsets, end_offsets
+
+
+  @staticmethod
+  def to_processors_sentence(s: odinson.Sentence) -&gt; processors.Sentence:
+
+    graphs: Optional[processors.GraphMap] = None
+    # NOTE: by convention, these are non-plural
+    fields_dict: Dict[Text, Optional[Tokens]] = {
+      &#34;raw&#34; : None,
+      &#34;word&#34; : None,
+      &#34;tag&#34; : None,
+      &#34;lemma&#34; : None,
+      &#34;entity&#34; : None,
+      &#34;chunk&#34; : None,
+      &#34;norm&#34; : None
+    }
+
+    def is_token_field(field: odinson.Field, name: Optional[odinson.Fields] = None) -&gt; bool:
+      _is_token_field = isinstance(field, odinson.TokensField)
+      if name is not None:
+        return True if _is_token_field and field.name == name else False
+      return _is_token_field
+    
+
+    for field in s.fields:
+      if is_token_field(field) and field.name in fields_dict:
+        fields_dict[field.name] = field.tokens
+      elif isinstance(field, odinson.GraphField):
+        # assume graph is hybrid
+        graphs = graphs or dict()
+        graphs[processors.Graphs.HYBRID_DEPENDENCIES] = processors.DirectedGraph(
+          edges = [processors.Edge(source=e[0], destination=e[1], relation=e[2]) for e in field.edges],
+          roots = list(field.roots)
+        )
+
+    PLACEHOLDER = [&#34;&#34;] * s.numTokens
+    raw = fields_dict.get(&#34;raw&#34;, PLACEHOLDER) or fields_dict.get(&#34;word&#34;, PLACEHOLDER) or PLACEHOLDER
+    start_offsets, end_offsets = ConversionUtils.create_character_offsets(raw)
+    return processors.Sentence(
+      raw = raw,
+      startOffsets = start_offsets,
+      endOffsets = end_offsets,
+      words = fields_dict.get(&#34;word&#34;, PLACEHOLDER) or PLACEHOLDER,
+      tags = fields_dict.get(&#34;tag&#34;, None),
+      lemmas = fields_dict.get(&#34;lemma&#34;, None),
+      entities = fields_dict.get(&#34;entity&#34;, None),
+      chunks= fields_dict.get(&#34;chunk&#34;, None),
+      norms = fields_dict.get(&#34;norm&#34;, None),
+      graphs = graphs
+    )</code></pre>
+</details>
+<h3>Static methods</h3>
+<dl>
+<dt id="clu.bridge.conversion.ConversionUtils.create_character_offsets"><code class="name flex">
+<span>def <span class="ident">create_character_offsets</span></span>(<span>toks: Tokens) ‑> Tuple[List[int], List[int]]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Create start and end char offsets for tokens by treating them as whitespace-delimited</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def create_character_offsets(toks: Tokens) -&gt; Tuple[Indices, Indices]:
+  &#34;&#34;&#34;Create start and end char offsets for tokens by treating them as whitespace-delimited&#34;&#34;&#34;
+  current_start = -1
+  current_end = 0
+  start_offsets = []
+  end_offsets = []
+  for tok in toks:
+    current_start += 1
+    start_offsets.append(current_start)
+    current_start += len(tok)
+    current_end += len(tok)
+    end_offsets.append(current_end)
+    current_end += 1
+  return start_offsets, end_offsets</code></pre>
+</details>
+</dd>
+<dt id="clu.bridge.conversion.ConversionUtils.to_odinson"><code class="name flex">
+<span>def <span class="ident">to_odinson</span></span>(<span>doc: processors.Document) ‑> <a title="clu.bridge.odinson.Document" href="odinson.html#clu.bridge.odinson.Document">Document</a></span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def to_odinson(doc: processors.Document) -&gt; odinson.Document:
+  pass</code></pre>
+</details>
+</dd>
+<dt id="clu.bridge.conversion.ConversionUtils.to_odinson_sentence"><code class="name flex">
+<span>def <span class="ident">to_odinson_sentence</span></span>(<span>s: processors.Sentence) ‑> clu.bridge.odinson.Sentence</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def to_odinson_sentence(s: processors.Sentence) -&gt; odinson.Sentence:
+  pass</code></pre>
+</details>
+</dd>
+<dt id="clu.bridge.conversion.ConversionUtils.to_processors"><code class="name flex">
+<span>def <span class="ident">to_processors</span></span>(<span>doc: odinson.Document) ‑> <a title="clu.bridge.processors.Document" href="processors.html#clu.bridge.processors.Document">Document</a></span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def to_processors(doc: odinson.Document) -&gt; processors.Document:
+  return processors.Document(
+    id = doc.id,
+    sentences = [ConversionUtils.to_processors_sentence(s) for s in doc.sentences]
+  )</code></pre>
+</details>
+</dd>
+<dt id="clu.bridge.conversion.ConversionUtils.to_processors_sentence"><code class="name flex">
+<span>def <span class="ident">to_processors_sentence</span></span>(<span>s: odinson.Sentence) ‑> <a title="clu.bridge.processors.Sentence" href="processors.html#clu.bridge.processors.Sentence">Sentence</a></span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def to_processors_sentence(s: odinson.Sentence) -&gt; processors.Sentence:
+
+  graphs: Optional[processors.GraphMap] = None
+  # NOTE: by convention, these are non-plural
+  fields_dict: Dict[Text, Optional[Tokens]] = {
+    &#34;raw&#34; : None,
+    &#34;word&#34; : None,
+    &#34;tag&#34; : None,
+    &#34;lemma&#34; : None,
+    &#34;entity&#34; : None,
+    &#34;chunk&#34; : None,
+    &#34;norm&#34; : None
+  }
+
+  def is_token_field(field: odinson.Field, name: Optional[odinson.Fields] = None) -&gt; bool:
+    _is_token_field = isinstance(field, odinson.TokensField)
+    if name is not None:
+      return True if _is_token_field and field.name == name else False
+    return _is_token_field
+  
+
+  for field in s.fields:
+    if is_token_field(field) and field.name in fields_dict:
+      fields_dict[field.name] = field.tokens
+    elif isinstance(field, odinson.GraphField):
+      # assume graph is hybrid
+      graphs = graphs or dict()
+      graphs[processors.Graphs.HYBRID_DEPENDENCIES] = processors.DirectedGraph(
+        edges = [processors.Edge(source=e[0], destination=e[1], relation=e[2]) for e in field.edges],
+        roots = list(field.roots)
+      )
+
+  PLACEHOLDER = [&#34;&#34;] * s.numTokens
+  raw = fields_dict.get(&#34;raw&#34;, PLACEHOLDER) or fields_dict.get(&#34;word&#34;, PLACEHOLDER) or PLACEHOLDER
+  start_offsets, end_offsets = ConversionUtils.create_character_offsets(raw)
+  return processors.Sentence(
+    raw = raw,
+    startOffsets = start_offsets,
+    endOffsets = end_offsets,
+    words = fields_dict.get(&#34;word&#34;, PLACEHOLDER) or PLACEHOLDER,
+    tags = fields_dict.get(&#34;tag&#34;, None),
+    lemmas = fields_dict.get(&#34;lemma&#34;, None),
+    entities = fields_dict.get(&#34;entity&#34;, None),
+    chunks= fields_dict.get(&#34;chunk&#34;, None),
+    norms = fields_dict.get(&#34;norm&#34;, None),
+    graphs = graphs
+  )</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
 </section>
 </article>
 <nav id="sidebar">
@@ -42,6 +378,20 @@
 <li><h3>Super-module</h3>
 <ul>
 <li><code><a title="clu.bridge" href="index.html">clu.bridge</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="clu.bridge.conversion.ConversionUtils" href="#clu.bridge.conversion.ConversionUtils">ConversionUtils</a></code></h4>
+<ul class="">
+<li><code><a title="clu.bridge.conversion.ConversionUtils.create_character_offsets" href="#clu.bridge.conversion.ConversionUtils.create_character_offsets">create_character_offsets</a></code></li>
+<li><code><a title="clu.bridge.conversion.ConversionUtils.to_odinson" href="#clu.bridge.conversion.ConversionUtils.to_odinson">to_odinson</a></code></li>
+<li><code><a title="clu.bridge.conversion.ConversionUtils.to_odinson_sentence" href="#clu.bridge.conversion.ConversionUtils.to_odinson_sentence">to_odinson_sentence</a></code></li>
+<li><code><a title="clu.bridge.conversion.ConversionUtils.to_processors" href="#clu.bridge.conversion.ConversionUtils.to_processors">to_processors</a></code></li>
+<li><code><a title="clu.bridge.conversion.ConversionUtils.to_processors_sentence" href="#clu.bridge.conversion.ConversionUtils.to_processors_sentence">to_processors_sentence</a></code></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.9.2" />
-<title>clu.bridge.odinson API documentation</title>
+<title>clu.bridge.typing API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
@@ -20,7 +20,7 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>clu.bridge.odinson</code></h1>
+<h1 class="title">Module <code>clu.bridge.typing</code></h1>
 </header>
 <section id="section-intro">
 <details class="source">
@@ -28,69 +28,13 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">from __future__ import annotations
-from clu.bridge.typing import Tokens
 from enum import Enum
-from typing import List, Literal, Set, Text, Tuple, Type, Union
-import abc
-from pydantic import BaseModel
-import pydantic
+from typing import Dict, ForwardRef, List, Optional, Text, Tuple
 
-__all__ = [&#34;Document&#34;, &#34;AnyField&#34;]
+__all__ = [&#34;Tokens&#34;, &#34;Indices&#34;]
 
-class Fields(Text, Enum):
-  # $type      ai.lum.odinson.*
-  TOKENS_FIELD = &#34;ai.lum.odinson.TokensField&#34;
-  GRAPH_FIELD = &#34;ai.lum.odinson.GraphField&#34;
-  STRING_FIELD = &#34;ai.lum.odinson.StringField&#34;
-  DATE_FIELD = &#34;ai.lum.odinson.DateField&#34;
-  NUMBER_FIELD = &#34;ai.lum.odinson.NumberField&#34;
-  NESTED_FIELD = &#34;ai.lum.odinson.NestedField&#34;
-
-class Field(BaseModel):
-  name: Text
-  type: Fields = pydantic.Field(alias=&#34;$type&#34;, default=&#34;ai.lum.odinson.Field&#34;)
-  class Config:
-      use_enum_values = True
-
-class TokensField(Field):
-  tokens: Tokens
-  type: Literal[Fields.TOKENS_FIELD] = pydantic.Field(alias=&#34;$type&#34;, default=Fields.TOKENS_FIELD)
-
-class GraphField(Field):
-  edges: List[Tuple[int, int, Text]]
-  roots: Set[int]
-  type: Literal[Fields.GRAPH_FIELD] = pydantic.Field(alias=&#34;$type&#34;, default=Fields.GRAPH_FIELD)
-
-class StringField(Field):
-  string: Text
-  type: Literal[Fields.STRING_FIELD] = pydantic.Field(alias=&#34;$type&#34;, default=Fields.STRING_FIELD)
-
-class DateField(Field):
-  date: Text
-  type: Literal[Fields.DATE_FIELD] = pydantic.Field(alias=&#34;$type&#34;, default=Fields.DATE_FIELD)
-
-class NumberField(Field):
-  value: float
-  type: Literal[Fields.NUMBER_FIELD] = pydantic.Field(alias=&#34;$type&#34;, default=Fields.NUMBER_FIELD)
-
-class NestedField(Field):
-
-  fields: List[Type[Field]]
-  type: Literal[Fields.NESTED_FIELD] = pydantic.Field(alias=&#34;$type&#34;, default=Fields.NESTED_FIELD)
-
-AnyField = Union[TokensField, GraphField, StringField, DateField, NumberField, NestedField]
-class Sentence(BaseModel):
-  numTokens: int
-  # FIXME: figure out how to just use List[Type[Field]]
-  fields: List[AnyField]
-
-class Document(BaseModel):
-  &#34;&#34;&#34;ai.lum.odinson.Document&#34;&#34;&#34;
-  id: Text
-  # FIXME: figure out how to just use List[Type[Field]]
-  #metadata: List[AnyField] = []
-  metadata: List[AnyField]
-  sentences: List[Sentence]</code></pre>
+Tokens = List[Text]
+Indices = List[int]</code></pre>
 </details>
 </section>
 <section>
@@ -100,50 +44,6 @@ class Document(BaseModel):
 <section>
 </section>
 <section>
-<h2 class="section-title" id="header-classes">Classes</h2>
-<dl>
-<dt id="clu.bridge.odinson.Document"><code class="flex name class">
-<span>class <span class="ident">Document</span></span>
-<span>(</span><span>**data: Any)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>ai.lum.odinson.Document</p>
-<p>Create a new model by parsing and validating input data from keyword arguments.</p>
-<p>Raises ValidationError if the input data cannot be parsed to form a valid model.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class Document(BaseModel):
-  &#34;&#34;&#34;ai.lum.odinson.Document&#34;&#34;&#34;
-  id: Text
-  # FIXME: figure out how to just use List[Type[Field]]
-  #metadata: List[AnyField] = []
-  metadata: List[AnyField]
-  sentences: List[Sentence]</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li>pydantic.main.BaseModel</li>
-<li>pydantic.utils.Representation</li>
-</ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="clu.bridge.odinson.Document.id"><code class="name">var <span class="ident">id</span> : str</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="clu.bridge.odinson.Document.metadata"><code class="name">var <span class="ident">metadata</span> : List[Union[clu.bridge.odinson.TokensField, clu.bridge.odinson.GraphField, clu.bridge.odinson.StringField, clu.bridge.odinson.DateField, clu.bridge.odinson.NumberField, clu.bridge.odinson.NestedField]]</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="clu.bridge.odinson.Document.sentences"><code class="name">var <span class="ident">sentences</span> : List[clu.bridge.odinson.Sentence]</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
-</dd>
-</dl>
 </section>
 </article>
 <nav id="sidebar">
@@ -155,18 +55,6 @@ class Document(BaseModel):
 <li><h3>Super-module</h3>
 <ul>
 <li><code><a title="clu.bridge" href="index.html">clu.bridge</a></code></li>
-</ul>
-</li>
-<li><h3><a href="#header-classes">Classes</a></h3>
-<ul>
-<li>
-<h4><code><a title="clu.bridge.odinson.Document" href="#clu.bridge.odinson.Document">Document</a></code></h4>
-<ul class="">
-<li><code><a title="clu.bridge.odinson.Document.id" href="#clu.bridge.odinson.Document.id">id</a></code></li>
-<li><code><a title="clu.bridge.odinson.Document.metadata" href="#clu.bridge.odinson.Document.metadata">metadata</a></code></li>
-<li><code><a title="clu.bridge.odinson.Document.sentences" href="#clu.bridge.odinson.Document.sentences">sentences</a></code></li>
-</ul>
-</li>
 </ul>
 </li>
 </ul>

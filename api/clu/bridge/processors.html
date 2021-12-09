@@ -28,14 +28,14 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">from __future__ import annotations
+from clu.bridge.typing import Tokens, Indices
 from enum import Enum
-from typing import Dict, List, Optional, Text, Tuple
+from typing import Dict, ForwardRef, List, Optional, Text, Tuple
 from pydantic import BaseModel, Extra, Field, PrivateAttr, validate_arguments
 
 __all__ = [&#34;Document&#34;, &#34;Sentence&#34;, &#34;DirectedGraph&#34;, &#34;Graphs&#34;, &#34;Edge&#34;]
 
-Tokens = List[Text]
-Indices = List[int]
+GraphMap = Dict[ForwardRef(&#34;Graphs&#34;), ForwardRef(&#34;DirectedGraph&#34;)]
 
 # see https://github.com/clulab/processors/blob/master/main/src/main/scala/org/clulab/struct/GraphMap.scala
 class Graphs(Text, Enum):
@@ -58,15 +58,15 @@ class DirectedGraph(BaseModel):
 
 class Sentence(BaseModel):
   raw: Tokens
-  words: Tokens
-  tags: Optional[Tokens]
-  lemmas: Optional[Tokens]
-  entities: Optional[Tokens]
-  chunks: Optional[Tokens]
-  norms: Optional[Tokens]
   startOffsets: Indices
   endOffsets: Indices
-  graphs: Optional[Dict[Graphs, DirectedGraph]]
+  words: Optional[Tokens] = None
+  tags: Optional[Tokens] = None
+  lemmas: Optional[Tokens] = None
+  entities: Optional[Tokens] = None
+  chunks: Optional[Tokens] = None
+  norms: Optional[Tokens] = None
+  graphs: Optional[Dict[Graphs, DirectedGraph]] = None
   # tell pydantic to use enum *values*
   class Config:
       use_enum_values = True
@@ -76,8 +76,8 @@ class Sentence(BaseModel):
 
 class Document(BaseModel):
   &#34;&#34;&#34;clu.processors.Document&#34;&#34;&#34;
-  id: Optional[Text]
-  text: Optional[Text]
+  id: Optional[Text] = None
+  text: Optional[Text] = None
   sentences: List[Sentence]
   class Config:
       use_enum_values = True
@@ -141,8 +141,8 @@ class Document(BaseModel):
 </summary>
 <pre><code class="python">class Document(BaseModel):
   &#34;&#34;&#34;clu.processors.Document&#34;&#34;&#34;
-  id: Optional[Text]
-  text: Optional[Text]
+  id: Optional[Text] = None
+  text: Optional[Text] = None
   sentences: List[Sentence]
   class Config:
       use_enum_values = True
@@ -161,7 +161,7 @@ class Document(BaseModel):
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="clu.bridge.processors.Document.id"><code class="name">var <span class="ident">id</span> : Optional[str]</code></dt>
+<dt id="clu.bridge.processors.Document.id"><code class="name">var <span class="ident">id</span> : Union[str, NoneType]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -169,7 +169,7 @@ class Document(BaseModel):
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="clu.bridge.processors.Document.text"><code class="name">var <span class="ident">text</span> : Optional[str]</code></dt>
+<dt id="clu.bridge.processors.Document.text"><code class="name">var <span class="ident">text</span> : Union[str, NoneType]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -281,15 +281,15 @@ class Document(BaseModel):
 </summary>
 <pre><code class="python">class Sentence(BaseModel):
   raw: Tokens
-  words: Tokens
-  tags: Optional[Tokens]
-  lemmas: Optional[Tokens]
-  entities: Optional[Tokens]
-  chunks: Optional[Tokens]
-  norms: Optional[Tokens]
   startOffsets: Indices
   endOffsets: Indices
-  graphs: Optional[Dict[Graphs, DirectedGraph]]
+  words: Optional[Tokens] = None
+  tags: Optional[Tokens] = None
+  lemmas: Optional[Tokens] = None
+  entities: Optional[Tokens] = None
+  chunks: Optional[Tokens] = None
+  norms: Optional[Tokens] = None
+  graphs: Optional[Dict[Graphs, DirectedGraph]] = None
   # tell pydantic to use enum *values*
   class Config:
       use_enum_values = True
@@ -308,7 +308,7 @@ class Document(BaseModel):
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="clu.bridge.processors.Sentence.chunks"><code class="name">var <span class="ident">chunks</span> : Optional[List[str]]</code></dt>
+<dt id="clu.bridge.processors.Sentence.chunks"><code class="name">var <span class="ident">chunks</span> : Union[List[str], NoneType]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -316,19 +316,19 @@ class Document(BaseModel):
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="clu.bridge.processors.Sentence.entities"><code class="name">var <span class="ident">entities</span> : Optional[List[str]]</code></dt>
+<dt id="clu.bridge.processors.Sentence.entities"><code class="name">var <span class="ident">entities</span> : Union[List[str], NoneType]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="clu.bridge.processors.Sentence.graphs"><code class="name">var <span class="ident">graphs</span> : Optional[Dict[<a title="clu.bridge.processors.Graphs" href="#clu.bridge.processors.Graphs">Graphs</a>, <a title="clu.bridge.processors.DirectedGraph" href="#clu.bridge.processors.DirectedGraph">DirectedGraph</a>]]</code></dt>
+<dt id="clu.bridge.processors.Sentence.graphs"><code class="name">var <span class="ident">graphs</span> : Union[Dict[<a title="clu.bridge.processors.Graphs" href="#clu.bridge.processors.Graphs">Graphs</a>, <a title="clu.bridge.processors.DirectedGraph" href="#clu.bridge.processors.DirectedGraph">DirectedGraph</a>], NoneType]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="clu.bridge.processors.Sentence.lemmas"><code class="name">var <span class="ident">lemmas</span> : Optional[List[str]]</code></dt>
+<dt id="clu.bridge.processors.Sentence.lemmas"><code class="name">var <span class="ident">lemmas</span> : Union[List[str], NoneType]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="clu.bridge.processors.Sentence.norms"><code class="name">var <span class="ident">norms</span> : Optional[List[str]]</code></dt>
+<dt id="clu.bridge.processors.Sentence.norms"><code class="name">var <span class="ident">norms</span> : Union[List[str], NoneType]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -340,11 +340,11 @@ class Document(BaseModel):
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="clu.bridge.processors.Sentence.tags"><code class="name">var <span class="ident">tags</span> : Optional[List[str]]</code></dt>
+<dt id="clu.bridge.processors.Sentence.tags"><code class="name">var <span class="ident">tags</span> : Union[List[str], NoneType]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="clu.bridge.processors.Sentence.words"><code class="name">var <span class="ident">words</span> : List[str]</code></dt>
+<dt id="clu.bridge.processors.Sentence.words"><code class="name">var <span class="ident">words</span> : Union[List[str], NoneType]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
