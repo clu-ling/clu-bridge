@@ -1,6 +1,7 @@
 from __future__ import annotations
 from clu.bridge import processors
 from clu.bridge import odinson
+from clu.bridge.typing import Tokens, Indices
 
 from enum import Enum
 from typing import Dict, List, Literal, Optional, Set, Text, Tuple, Type
@@ -8,9 +9,6 @@ import abc
 
 
 __all__ = ["ConversionUtils"]
-
-Tokens = List[Text]
-
 class ConversionUtils:
   """Conversion utilities for greater CLU family docs"""
   
@@ -28,6 +26,23 @@ class ConversionUtils:
       id = doc.id,
       sentences = [ConversionUtils.to_processors_sentence(s) for s in doc.sentences]
     )
+
+  @staticmethod
+  def create_character_offsets(toks: Tokens) -> Tuple[Indices, Indices]:
+    """Create start and end char offsets for tokens by treating them as whitespace-delimited"""
+    current_start = -1
+    current_end = 0
+    start_offsets = []
+    end_offsets = []
+    for tok in toks:
+      current_start += 1
+      start_offsets.append(current_start)
+      current_start += len(tok)
+      current_end += len(tok)
+      end_offsets.append(current_end)
+      current_end += 1
+    return start_offsets, end_offsets
+
 
   @staticmethod
   def to_processors_sentence(s: odinson.Sentence) -> processors.Sentence:
@@ -50,6 +65,7 @@ class ConversionUtils:
         return True if _is_token_field and field.name == name else False
       return _is_token_field
     
+
     for field in s.fields:
       if is_token_field(field) and field.name in fields_dict:
         fields_dict[field.name] = field.tokens
@@ -62,8 +78,12 @@ class ConversionUtils:
         )
 
     PLACEHOLDER = [""] * s.numTokens
+    raw = fields_dict.get("raw", PLACEHOLDER) or fields_dict.get("word", PLACEHOLDER) or PLACEHOLDER
+    start_offsets, end_offsets = ConversionUtils.create_character_offsets(raw)
     return processors.Sentence(
-      raw = fields_dict.get("raw", PLACEHOLDER) or fields_dict.get("word", PLACEHOLDER) or PLACEHOLDER,
+      raw = raw,
+      startOffsets = start_offsets,
+      endOffsets = end_offsets,
       words = fields_dict.get("word", PLACEHOLDER) or PLACEHOLDER,
       tags = fields_dict.get("tag", None),
       lemmas = fields_dict.get("lemma", None),
@@ -72,3 +92,10 @@ class ConversionUtils:
       norms = fields_dict.get("norm", None),
       graphs = graphs
     )
+
+
+#   /** Start character offsets for the raw tokens; start at 0 */
+#   val startOffsets: Array[Int],
+#   /** End character offsets for the raw tokens; start at 0 */
+#   val endOffsets: Array[Int],
+# exclude_none=True

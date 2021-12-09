@@ -29,14 +29,14 @@ class DirectedGraph(BaseModel):
 
 class Sentence(BaseModel):
   raw: Tokens
-  words: Tokens
+  startOffsets: Indices
+  endOffsets: Indices
+  words: Optional[Tokens] = None
   tags: Optional[Tokens] = None
   lemmas: Optional[Tokens] = None
   entities: Optional[Tokens] = None
   chunks: Optional[Tokens] = None
   norms: Optional[Tokens] = None
-  startOffsets: Optional[Indices] = None
-  endOffsets: Optional[Indices] = None
   graphs: Optional[Dict[Graphs, DirectedGraph]] = None
   # tell pydantic to use enum *values*
   class Config:

@@ -48,6 +48,7 @@ setup(
     scripts=[
     #    os.path.join("bin", "example-script"),
         os.path.join("bin", "clu-bridge-rest-api")
+        os.path.join("bin", "odinson-to-processors")
     ],
     
     install_requires=required,
