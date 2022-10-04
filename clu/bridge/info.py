@@ -1,5 +1,6 @@
 from typing import List, Text
 
+
 class AppInfo:
     """
     General information about the application.
@@ -10,8 +11,8 @@ class AppInfo:
 
     version: Text = "0.1"
     description: Text = "Utilities for converting documents"
-    
-    authors: List[Text] = ['myedibleenso']
+
+    authors: List[Text] = ["myedibleenso"]
     contact: Text = "gus@parsertongue.org"
     repo: Text = "https://github.com/clu-ling/clu-bridge"
     license: Text = "Apache 2.0"

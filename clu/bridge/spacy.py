@@ -3,13 +3,10 @@ from clu.bridge import processors
 import spacy
 
 from spacy.tokens import Doc as SpacyDoc
-from spacy.tokens import (
-  Span as SpacySpan, 
-  Token as SpacyToken
-)
+from spacy.tokens import Span as SpacySpan, Token as SpacyToken
+
 
 class ConversionUtils:
-  
     @staticmethod
     def _peek(generator: Iterable) -> Union[SpacyToken, None]:
         """peek() will return either the next Spacy Token in the iterable or None."""
@@ -34,11 +31,11 @@ class ConversionUtils:
         """
 
         return processors.Document(
-          # FIXME: what about ID?
-          id=None,
-          # FIXME: what about text?
-          text=None,
-          sentences=[ConversionUtils.to_clu_sentence(s) for s in spacyDoc.sents]
+            # FIXME: what about ID?
+            id=None,
+            # FIXME: what about text?
+            text=None,
+            sentences=[ConversionUtils.to_clu_sentence(s) for s in spacyDoc.sents],
         )
 
     @staticmethod
@@ -55,10 +52,10 @@ class ConversionUtils:
         assert start_offsets[0] == 0
         return (start_offsets, end_offsets)
 
-
-
     @staticmethod
-    def to_clu_graph(sent: SpacySpan) -> Dict[processors.Graphs, processors.DirectedGraph]:
+    def to_clu_graph(
+        sent: SpacySpan,
+    ) -> Dict[processors.Graphs, processors.DirectedGraph]:
         """Create a hybrid graph from a SpaCy dependency parse"""
         words = []
         edges: Set[processors.Edge] = set()
@@ -68,16 +65,24 @@ class ConversionUtils:
             child = ConversionUtils._peek(children)
             while child is not None:
                 edge = processors.Edge(
-                  source=token.i - sent.start,
-                  destination=child.i - sent.start,
-                  relation=child.dep_,
+                    source=token.i - sent.start,
+                    destination=child.i - sent.start,
+                    relation=child.dep_,
                 )
                 edges.add(edge)
                 child = ConversionUtils._peek(children)
-        edges = edges.union(processors.ConversionUtils._make_collapsed_deps(words=words, edges=list(edges)))
-        roots =  [sent.root.i - sent.start]
+        edges = edges.union(
+            processors.ConversionUtils._make_collapsed_deps(
+                words=words, edges=list(edges)
+            )
+        )
+        roots = [sent.root.i - sent.start]
 
-        return { processors.Graphs.HYBRID_DEPENDENCIES: processors.DirectedGraph(edges=list(edges), roots=roots) }
+        return {
+            processors.Graphs.HYBRID_DEPENDENCIES: processors.DirectedGraph(
+                edges=list(edges), roots=roots
+            )
+        }
 
     @staticmethod
     def to_clu_sentence(sent: SpacySpan) -> processors.Sentence:
@@ -96,20 +101,20 @@ class ConversionUtils:
         start_offsets, end_offsets = ConversionUtils._spaces_to_offsets(sent)
 
         sentence = processors.Sentence(
-          raw=[token.text for token in sent],
-          startOffsets=start_offsets,
-          endOffsets=end_offsets,
-          words=[token.text for token in sent],
-          tags=[token.tag_ for token in sent],
-          lemmas=[token.lemma_ for token in sent],
-          # FIXME: how to get SpaCy chunks?
-          chunks=["O" for token in sent],
-          entities=[
-            t.ent_iob_ + "-" + t.ent_type_ if t.ent_type_ != "" else "O"
-            for t in sent
-          ],
-          norms=[token.text for token in sent],
-          graphs=ConversionUtils.to_clu_graph(sent)
+            raw=[token.text for token in sent],
+            startOffsets=start_offsets,
+            endOffsets=end_offsets,
+            words=[token.text for token in sent],
+            tags=[token.tag_ for token in sent],
+            lemmas=[token.lemma_ for token in sent],
+            # FIXME: how to get SpaCy chunks?
+            chunks=["O" for token in sent],
+            entities=[
+                t.ent_iob_ + "-" + t.ent_type_ if t.ent_type_ != "" else "O"
+                for t in sent
+            ],
+            norms=[token.text for token in sent],
+            graphs=ConversionUtils.to_clu_graph(sent),
         )
         # FIXME: create hybrid graph
         return sentence

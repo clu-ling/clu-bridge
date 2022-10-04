@@ -10,13 +10,9 @@ import abc
 
 
 __all__ = ["ConversionUtils"]
+
+
 class ConversionUtils:
 
-  processors = processors.ConversionUtils
-  spacy = spacy.ConversionUtils
-
-#   /** Start character offsets for the raw tokens; start at 0 */
-#   val startOffsets: Array[Int],
-#   /** End character offsets for the raw tokens; start at 0 */
-#   val endOffsets: Array[Int],
-# exclude_none=True
+    processors = processors.ConversionUtils
+    spacy = spacy.ConversionUtils
