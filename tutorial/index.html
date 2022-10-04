@@ -74,7 +74,7 @@
                 </ul>
                 <p class="caption"><span class="caption-text">API</span></p>
                 <ul>
-                    <li class="toctree-l1"><a class="reference internal" href="../api/clu/bridge/">clu.bridge</a>
+                    <li class="toctree-l1"><a class="" href="../api/clu/bridge/index.html">clu.bridge</a>
                     </li>
                 </ul>
                 <p class="caption"><span class="caption-text">About</span></p>
@@ -124,8 +124,26 @@
           <div role="main">
             <div class="section">
               
-                <h1 id="tutorial">Tutorial<a class="headerlink" href="#tutorial" title="Permanent link"></a></h1>
-<p>All clu projects should include a tutorial with examples.</p>
+                <h1 id="converting-spacy-doc-and-clu-documents">Converting SpaCy Doc and Clu Documents<a class="headerlink" href="#converting-spacy-doc-and-clu-documents" title="Permanent link"></a></h1>
+<p>The <code>clu-bridge</code> library can be used to convert SpaCy and <a href="https://github.com/clulab/processors">Clu Processors</a> documents to and <a href="https://github.com/lum-ai/odinson">Odinson</a> documents:</p>
+<h1 id="tutorial">Tutorial<a class="headerlink" href="#tutorial" title="Permanent link"></a></h1>
+<pre><code class="language-bash"># download a spacy model
+spacy download en_core_web_trf
+</code></pre>
+<pre><code class="language-python">import spacy
+from clu.bridge.conversion import ConversionUtils
+
+nlp = spacy.load(&quot;en_core_web_trf&quot;)
+
+text = &quot;Dale Cooper saw the boy with a telescope.&quot;
+spacy_doc = nlp(text)
+
+# create a Clu Document
+clu_doc = ConversionUtils.spacy.to_clu_document(spacy_doc)
+
+# create an Odinson Document
+odinson_doc = ConversionUtils.processors.to_odinson_document(clu_doc)
+</code></pre>
               
             </div>
           </div>

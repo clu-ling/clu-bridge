@@ -2,42 +2,42 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://clu-ling.github.io/clu-bridge/</loc>
-         <lastmod>2021-12-09</lastmod>
+         <lastmod>2022-10-04</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://clu-ling.github.io/clu-bridge/contributing/</loc>
-         <lastmod>2021-12-09</lastmod>
+         <lastmod>2022-10-04</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://clu-ling.github.io/clu-bridge/install/</loc>
-         <lastmod>2021-12-09</lastmod>
+         <lastmod>2022-10-04</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://clu-ling.github.io/clu-bridge/tutorial/</loc>
-         <lastmod>2021-12-09</lastmod>
+         <lastmod>2022-10-04</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://clu-ling.github.io/clu-bridge/dev/documenation/</loc>
-         <lastmod>2021-12-09</lastmod>
+         <lastmod>2022-10-04</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://clu-ling.github.io/clu-bridge/dev/formatting/</loc>
-         <lastmod>2021-12-09</lastmod>
+         <lastmod>2022-10-04</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://clu-ling.github.io/clu-bridge/dev/install/</loc>
-         <lastmod>2021-12-09</lastmod>
+         <lastmod>2022-10-04</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://clu-ling.github.io/clu-bridge/dev/test/</loc>
-         <lastmod>2021-12-09</lastmod>
+         <lastmod>2022-10-04</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>
