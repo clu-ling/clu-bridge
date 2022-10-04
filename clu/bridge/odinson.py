@@ -23,6 +23,9 @@ class Field(BaseModel):
   class Config:
       use_enum_values = True
 
+class NumberField(Field):
+  value: Indices
+  type: Literal[Fields.NUMBER_FIELD] = pydantic.Field(alias="$type", default=Fields.NUMBER_FIELD)
 class TokensField(Field):
   tokens: Tokens
   type: Literal[Fields.TOKENS_FIELD] = pydantic.Field(alias="$type", default=Fields.TOKENS_FIELD)
@@ -30,11 +33,12 @@ class TokensField(Field):
 class GraphField(Field):
   edges: List[Tuple[int, int, Text]]
   roots: Set[int]
+  name: Text = Literal["dependencies"]
   type: Literal[Fields.GRAPH_FIELD] = pydantic.Field(alias="$type", default=Fields.GRAPH_FIELD)
 
 class StringField(Field):
   string: Text
-  type: Literal[Fields.STRING_FIELD] = pydantic.Field(alias="$type", default=Fields.STRING_FIELD)
+  name: Literal[Fields.STRING_FIELD] = pydantic.Field(alias="$type", default=Fields.STRING_FIELD)
 
 class DateField(Field):
   date: Text
@@ -45,7 +49,6 @@ class NumberField(Field):
   type: Literal[Fields.NUMBER_FIELD] = pydantic.Field(alias="$type", default=Fields.NUMBER_FIELD)
 
 class NestedField(Field):
-
   fields: List[Type[Field]]
   type: Literal[Fields.NESTED_FIELD] = pydantic.Field(alias="$type", default=Fields.NESTED_FIELD)
 
