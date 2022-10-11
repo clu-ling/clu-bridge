@@ -52,7 +52,7 @@ class GraphField(Field):
 
 class StringField(Field):
     string: Text
-    name: Literal[Fields.STRING_FIELD] = pydantic.Field(
+    type: Literal[Fields.STRING_FIELD] = pydantic.Field(
         alias="$type", default=Fields.STRING_FIELD
     )
 
