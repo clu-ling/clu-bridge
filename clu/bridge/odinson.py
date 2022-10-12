@@ -25,58 +25,52 @@ class Field(BaseModel):
 
     class Config:
         use_enum_values = True
+        arbitrary_types_allowed = True
 
 
 class NumberField(Field):
     value: Indices
-    type: Literal[Fields.NUMBER_FIELD] = pydantic.Field(
-        alias="$type", default=Fields.NUMBER_FIELD
+    type: Text = pydantic.Field(
+        alias="$type", default=Fields.NUMBER_FIELD.value
     )
-
 
 class TokensField(Field):
     tokens: Tokens
-    type: Literal[Fields.TOKENS_FIELD] = pydantic.Field(
-        alias="$type", default=Fields.TOKENS_FIELD
+    type: Text = pydantic.Field(
+        alias="$type", default=Fields.TOKENS_FIELD.value
     )
-
 
 class GraphField(Field):
     edges: List[Tuple[int, int, Text]]
     roots: Set[int]
-    name: Text = Literal["dependencies"]
-    type: Literal[Fields.GRAPH_FIELD] = pydantic.Field(
-        alias="$type", default=Fields.GRAPH_FIELD
+    name: Literal["dependencies"] = "dependencies"
+    type: Text = pydantic.Field(
+        alias="$type", default=Fields.GRAPH_FIELD.value
     )
-
 
 class StringField(Field):
     string: Text
-    type: Literal[Fields.STRING_FIELD] = pydantic.Field(
-        alias="$type", default=Fields.STRING_FIELD
+    type: Text = pydantic.Field(
+        alias="$type", default=Fields.STRING_FIELD.value
     )
-
 
 class DateField(Field):
     date: Text
-    type: Literal[Fields.DATE_FIELD] = pydantic.Field(
-        alias="$type", default=Fields.DATE_FIELD
+    type: Text = pydantic.Field(
+        alias="$type", default=Fields.DATE_FIELD.value
     )
-
 
 class NumberField(Field):
     value: float
-    type: Literal[Fields.NUMBER_FIELD] = pydantic.Field(
-        alias="$type", default=Fields.NUMBER_FIELD
+    type: Text = pydantic.Field(
+        alias="$type", default=Fields.NUMBER_FIELD.value
     )
-
 
 class NestedField(Field):
     fields: List[Type[Field]]
-    type: Literal[Fields.NESTED_FIELD] = pydantic.Field(
-        alias="$type", default=Fields.NESTED_FIELD
+    type: Text = pydantic.Field(
+        alias="$type", default=Fields.NESTED_FIELD.value
     )
-
 
 AnyField = Union[
     TokensField, GraphField, StringField, DateField, NumberField, NestedField
@@ -88,6 +82,9 @@ class Sentence(BaseModel):
     # FIXME: figure out how to just use List[Type[Field]]
     fields: List[AnyField]
 
+    class Config:
+        use_enum_values = True
+        arbitrary_types_allowed = True
 
 class Document(BaseModel):
     """ai.lum.odinson.Document"""
@@ -97,3 +94,7 @@ class Document(BaseModel):
     # metadata: List[AnyField] = []
     metadata: List[AnyField]
     sentences: List[Sentence]
+
+    class Config:
+        use_enum_values = True
+        arbitrary_types_allowed = True
