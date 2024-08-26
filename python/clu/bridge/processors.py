@@ -1,111 +1,26 @@
 from __future__ import annotations
+
+from lum.clu.processors.directed_graph import DirectedGraph as CluDirectedGraph, Edge as CluEdge
+from lum.clu.processors.document import Document as CluDocument
+from lum.clu.processors.sentence import Sentence as CluSentence
+from lum.odinson.doc import Document as OdinsonDocument, Sentence as OdinsonSentence, TokensField, GraphField, Field
 from clu.bridge.typing import Tokens, Indices
 from enum import Enum
 from typing import Dict, ForwardRef, List, Optional, Text, Tuple
 from pydantic import BaseModel, Extra, Field, PrivateAttr, validate_arguments
-from clu.bridge import odinson
-
-__all__ = ["Document", "Sentence", "DirectedGraph", "Graphs", "Edge"]
-
-GraphMap = Dict[ForwardRef("Graphs"), ForwardRef("DirectedGraph")]
-
-# see https://github.com/clulab/processors/blob/master/main/src/main/scala/org/clulab/struct/GraphMap.scala
-class Graphs(Text, Enum):
-    UNIVERSAL_BASIC = "universal-basic"  # basic Universal dependencies
-    UNIVERSAL_ENHANCED = (
-        "universal-enhanced"  # collapsed (or enhanced) Universal dependencies
-    )
-    STANFORD_BASIC = "stanford-basic"  # basic Stanford dependencies
-    STANFORD_COLLAPSED = "stanford-collapsed"  # collapsed Stanford dependencies
-    SEMANTIC_ROLES = "semantic-roles"  # semantic roles from CoNLL 2008-09, which includes PropBank and NomBank
-    ENHANCED_SEMANTIC_ROLES = "enhanced-semantic-roles"  # enhanced semantic roles
-    HYBRID_DEPENDENCIES = (
-        "hybrid"  # graph that merges ENHANCED_SEMANTIC_ROLES and UNIVERSAL_ENHANCED
-    )
+import typing
 
 
-class Edge(BaseModel):
-    source: int
-    destination: int
-    relation: Text
-
-    def __hash__(self):
-        return hash((self.source, self.destination, self.relation))
-
-
-class DirectedGraph(BaseModel):
-    edges: List[Edge]
-    roots: List[int]
-
-    def __hash__(self):
-        return hash(tuple([hash(e) for e in self.edges] + [hash(self.roots)]))
-
-
-class Sentence(BaseModel):
-    raw: Tokens
-    startOffsets: Indices
-    endOffsets: Indices
-    words: Optional[Tokens] = None
-    tags: Optional[Tokens] = None
-    lemmas: Optional[Tokens] = None
-    entities: Optional[Tokens] = None
-    chunks: Optional[Tokens] = None
-    norms: Optional[Tokens] = None
-    graphs: Optional[Dict[Graphs, DirectedGraph]] = None
-    # tell pydantic to use enum *values*
-    class Config:
-        use_enum_values = True
-        underscore_attrs_are_private = True
-        validate_assignment = True
-        extra = Extra.allow  # "ignore" # vs. "allow"
-
-    def __hash__(self):
-        return hash(
-            tuple(
-                [
-                    tuple(elem)
-                    for elem in [
-                        self.raw,
-                        self.startOffsets,
-                        self.endOffsets,
-                        self.words,
-                        self.tags,
-                        self.lemmas,
-                        self.entities,
-                        self.chunks,
-                        self.norms,
-                        self.graphs,
-                    ]
-                ]
-            )
-        )
-
-
-class Document(BaseModel):
-    """clu.processors.Document"""
-
-    id: Optional[Text] = None
-    text: Optional[Text] = None
-    sentences: List[Sentence]
-
-    def __hash__(self):
-        return hash(tuple([self.id, self.text] + [hash(s) for s in self.sentences]))
-
-    class Config:
-        use_enum_values = True
-        underscore_attrs_are_private = True
-        validate_assignment = True
-        extra = Extra.allow  # "ignore" # vs. "allow"
-
+PartialGraph = typing.Dict[int, typing.List[Tuple[int, typing.Text]]]
+HYBRID = "hybrid"
 
 class ConversionUtils:
 
     """Conversion utilities for processors to Odinson"""
 
     @staticmethod
-    def _make_collapsed_deps(words: List[Text], edges: List[Edge]) -> Set[Edge]:
+    def _make_collapsed_deps(words: typing.List[typing.Text], edges: typing.List[CluEdge]) -> typing.Set[CluEdge]:
         """Converts prep -> pobj to prep_pobj edge"""
-        PartialGraph = Dict[int, List[Tuple[int, Text]]]
         incoming: PartialGraph = {}
         outgoing: PartialGraph = {}
         for edge in edges:
@@ -121,7 +36,7 @@ class ConversionUtils:
                 adpos_idx = edge.destination
                 for (dest, rel) in outgoing[edge.destination]:
                     if rel == "pobj":
-                        collapsed = Edge(
+                        collapsed = CluEdge(
                             source=edge.source,
                             destination=dest,
                             relation=f"prep_{words[adpos_idx].lower()}",
@@ -129,17 +44,18 @@ class ConversionUtils:
                         res.add(collapsed)
         return res
 
-    # - create processors.Graphs.HYBRID_DEPENDENCIES
+    # - create processors.HYBRID
     @staticmethod
     def _make_hybrid_graph(
-        tokens: List[Text], graph_map: Dict[Graphs, DirectedGraph]
-    ) -> DirectedGraph:
+        tokens: typing.List[typing.Text], 
+        graph_map: typing.Dict[typing.Text, CluDirectedGraph]
+    ) -> CluDirectedGraph:
         """Combine all roots and edges of graphs, as well as collapsed edges"""
-        if Graphs.HYBRID_DEPENDENCIES in graph_map:
-            return graph_map[Graphs.HYBRID_DEPENDENCIES]
+        if HYBRID in graph_map:
+            return graph_map[HYBRID]
 
-        edges: Set[Edge] = {}
-        roots: Set[int] = {}
+        edges: typing.Set[CluEdge] = {}
+        roots: typing.Set[int] = {}
         for (k, dg) in graph_map.values():
             for root in dg.roots:
                 roots.add(root)
@@ -148,32 +64,37 @@ class ConversionUtils:
         collapsed = ConversionUtils._make_collapsed_deps(
             words=tokens, edges=list(edges)
         )
-        return DirectedGraph(roots=list(roots), edges=list(collapsed.union(edges)))
+        return CluDirectedGraph(roots=list(roots), edges=list(collapsed.union(edges)))
 
     @staticmethod
-    def to_odinson_document(doc: Document) -> odinson.Document:
+    def to_odinson_document(doc: CluDocument, metadata: typing.List[Field] = []) -> OdinsonDocument:
         """Create an OdinsonDocument from a processors.Document"""
         odinson_ss = [ConversionUtils.to_odinson_sentence(s) for s in doc.sentences]
-        return odinson.Document(
-            id=doc.id or str(doc.__hash__()), metadata=[], sentences=odinson_ss
+        return OdinsonDocument(
+            id=doc.id or str(doc.__hash__()), metadata=metadata, sentences=odinson_ss
         )
 
     @staticmethod
-    def to_odinson_sentence(s: Sentence) -> odinson.Sentence:
+    def _none_or_all_empty(elements: typing.Optional[typing.List[typing.Text]]) -> bool:
+        return True if elements == None else all(len(e) == 0 for e in elements)
+    
+    @staticmethod
+    def to_odinson_sentence(s: CluSentence) -> OdinsonSentence:
         """Create an OdinsonSentence from a processors.Sentence"""
         graph = ConversionUtils._make_hybrid_graph(tokens=s.words, graph_map=s.graphs)
-        return odinson.Sentence(
+        return OdinsonSentence(
             numTokens=len(s.raw),
             # List[Type[Field]]
             fields=[
                 f
                 for f in [
                     # raw
-                    odinson.TokensField(tokens=s.raw, name="raw"),
+                    TokensField(tokens=s.raw, name="raw"),
                     # dependencies (hybrid graph)
                     None
                     if s.graphs is None
-                    else odinson.GraphField(
+                    else GraphField(
+                        name="dependencies",
                         roots=graph.roots,
                         edges=[
                             (edge.source, edge.destination, edge.relation)
@@ -182,36 +103,36 @@ class ConversionUtils:
                     ),
                     # words
                     None
-                    if s.words is None
-                    else odinson.TokensField(tokens=s.words, name="word"),
+                    if ConversionUtils._none_or_all_empty(s.words)
+                    else TokensField(tokens=s.words, name="word"),
                     # lemmas
                     None
-                    if s.lemmas is None
-                    else odinson.TokensField(tokens=s.lemmas, name="lemma"),
+                    if ConversionUtils._none_or_all_empty(s.lemmas)
+                    else TokensField(tokens=s.lemmas, name="lemma"),
                     # tags
                     None
-                    if s.tags is None
-                    else odinson.TokensField(tokens=s.tags, name="tag"),
+                    if ConversionUtils._none_or_all_empty(s.tags)
+                    else TokensField(tokens=s.tags, name="tag"),
                     # entities
                     None
-                    if s.entities is None
-                    else odinson.TokensField(tokens=s.entities, name="entity"),
+                    if ConversionUtils._none_or_all_empty(s.entities)
+                    else TokensField(tokens=s.entities, name="entity"),
                     # chunks
                     None
-                    if s.chunks is None
-                    else odinson.TokensField(tokens=s.chunks, name="chunk"),
+                    if ConversionUtils._none_or_all_empty(s.chunks)
+                    else TokensField(tokens=s.chunks, name="chunk"),
                     # norms
                     None
-                    if s.norms is None
-                    else odinson.TokensField(tokens=s.norms, name="norm"),
+                    if ConversionUtils._none_or_all_empty(s.norms)
+                    else TokensField(tokens=s.norms, name="norm"),
                 ]
                 if f is not None
             ],
         )
 
     @staticmethod
-    def to_processors_document(doc: odinson.Document) -> Document:
-        return Document(
+    def to_processors_document(doc: OdinsonDocument) -> CluDocument:
+        return CluDocument(
             id=doc.id,
             sentences=[
                 ConversionUtils.to_processors_sentence(s) for s in doc.sentences
@@ -235,11 +156,11 @@ class ConversionUtils:
         return start_offsets, end_offsets
 
     @staticmethod
-    def to_processors_sentence(s: odinson.Sentence) -> Sentence:
+    def to_processors_sentence(s: OdinsonSentence) -> CluSentence:
 
-        graphs: Optional[GraphMap] = None
+        graphs: typing.Optional[typing.Dict[typing.Text, CluDirectedGraph]] = None
         # NOTE: by convention, these are non-plural
-        fields_dict: Dict[Text, Optional[Tokens]] = {
+        fields_dict: typing.Dict[typing.Text, typing.Optional[Tokens]] = {
             "raw": None,
             "word": None,
             "tag": None,
@@ -250,9 +171,9 @@ class ConversionUtils:
         }
 
         def is_token_field(
-            field: odinson.Field, name: Optional[odinson.Fields] = None
+            field: Field, name: str = None
         ) -> bool:
-            _is_token_field = isinstance(field, odinson.TokensField)
+            _is_token_field = isinstance(field, TokensField)
             if name is not None:
                 return True if _is_token_field and field.name == name else False
             return _is_token_field
@@ -260,12 +181,12 @@ class ConversionUtils:
         for field in s.fields:
             if is_token_field(field) and field.name in fields_dict:
                 fields_dict[field.name] = field.tokens
-            elif isinstance(field, odinson.GraphField):
+            elif isinstance(field, GraphField):
                 # assume graph is hybrid
                 graphs = graphs or dict()
-                graphs[Graphs.HYBRID_DEPENDENCIES] = DirectedGraph(
+                graphs[HYBRID] = CluDirectedGraph(
                     edges=[
-                        Edge(source=e[0], destination=e[1], relation=e[2])
+                        CluEdge(source=e[0], destination=e[1], relation=e[2])
                         for e in field.edges
                     ],
                     roots=list(field.roots),

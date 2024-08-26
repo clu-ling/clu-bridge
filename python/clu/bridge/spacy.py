@@ -1,8 +1,10 @@
 from typing import Dict, Iterable, List, Set, Text, Tuple, Union
-from clu.bridge import processors
+from lum.clu.processors.directed_graph import DirectedGraph as CluDirectedGraph, Edge as CluEdge
+from lum.clu.processors.document import Document as CluDocument
+from lum.clu.processors.sentence import Sentence as CluSentence
 import spacy
-
-from spacy.tokens import Doc as SpacyDoc
+from clu.bridge import processors
+from spacy.tokens import Doc as SpacyDocument
 from spacy.tokens import Span as SpacySpan, Token as SpacyToken
 
 
@@ -17,20 +19,20 @@ class ConversionUtils:
         return first
 
     @staticmethod
-    def to_clu_document(spacyDoc: SpacyDoc) -> processors.Document:
+    def to_clu_document(spacyDoc: SpacyDocument) -> CluDocument:
         """
-        Converts a SpacyDoc: Sequence[Token] to a CluDocument: Sequence[processors.Sentence]
+        Converts a SpacyDocument: Sequence[Token] to a CluDocument: Sequence[CluSentence]
 
         Parameters
         ----------
-        spacyDoc: a SpacyDoc object
+        spacyDoc: a SpacyDocument object
 
         Returns
         -------
-        A processors.Document object
+        A CluDocument object
         """
 
-        return processors.Document(
+        return CluDocument(
             # FIXME: what about ID?
             id=None,
             # FIXME: what about text?
@@ -55,16 +57,16 @@ class ConversionUtils:
     @staticmethod
     def to_clu_graph(
         sent: SpacySpan,
-    ) -> Dict[processors.Graphs, processors.DirectedGraph]:
+    ) -> Dict[str, CluDirectedGraph]:
         """Create a hybrid graph from a SpaCy dependency parse"""
         words = []
-        edges: Set[processors.Edge] = set()
+        edges: Set[CluEdge] = set()
         for token in sent:
             words.append(token.text)
             children = token.children
             child = ConversionUtils._peek(children)
             while child is not None:
-                edge = processors.Edge(
+                edge = CluEdge(
                     source=token.i - sent.start,
                     destination=child.i - sent.start,
                     relation=child.dep_,
@@ -79,13 +81,13 @@ class ConversionUtils:
         roots = [sent.root.i - sent.start]
 
         return {
-            processors.Graphs.HYBRID_DEPENDENCIES: processors.DirectedGraph(
+            processors.HYBRID: CluDirectedGraph(
                 edges=list(edges), roots=roots
             )
         }
 
     @staticmethod
-    def to_clu_sentence(sent: SpacySpan) -> processors.Sentence:
+    def to_clu_sentence(sent: SpacySpan) -> CluSentence:
         """
         Converts a SpaCy Span (Doc slice) object to a processors Sentence object.
 
@@ -100,7 +102,7 @@ class ConversionUtils:
 
         start_offsets, end_offsets = ConversionUtils._spaces_to_offsets(sent)
 
-        sentence = processors.Sentence(
+        sentence = CluSentence(
             raw=[token.text for token in sent],
             startOffsets=start_offsets,
             endOffsets=end_offsets,

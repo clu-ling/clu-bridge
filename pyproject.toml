@@ -1,16 +1,79 @@
-# https://packaging.python.org/tutorials/packaging-projects/#creating-pyproject-toml
-# https://www.python.org/dev/peps/pep-0621/
+[project]
+name = "clu-bridge"
+authors = [
+    {name="Gus Hahn-Powell", email="gus@parsertongue.org"}
+]
+description = "CLU <-> LUM <-> spaCy conversion utilities"
+version = "0.1.0"
+dependencies=[
+    "clu-processors @ git+https://github.com/lum-ai/clu-processors@main",
+    "odinson-rest[all] @ git+https://github.com/lum-ai/odinson-rest@main#subdirectory=python"
+]
+# The Python program analysis pipeline does not currently work with Python 3.9
+# or 3.10. This may change in the future.
+requires-python = ">=3.11"
+license = {text="Apache 2.0"}
+dynamic = ["readme"]
 
-[bdist_wheel]
-universal = 1
+[project.optional-dependencies]
+# Dev dependencies.
+# - pytest: for running tests
+# - black: Autoformatting
+dev = ["pytest", "pytest-cov", "pytest-xdist", "black", "mypy", "coverage"]
 
-# Example configuration for Black.
+demo = ["notebook"]
+
+spacy = ["spacy"]
+
+# project documentation generation
+doc = ["mkdocs==1.2.3", "pdoc3==0.10.0", "mkdocs-git-snippet==0.1.1", "mkdocs-git-revision-date-localized-plugin==0.11.1", "mkdocs-git-authors-plugin==0.6.3", "mkdocs-rtd-dropdown==1.0.2", "jinja2<3.1.0"]
+
+#odinson = ["odinson-rest[all] @ git+https://github.com/lum-ai/odinson-rest@main#subdirectory=python"]
+
+#vision = ["scikit-image", "matplotlib", "pytesseract"]
+
+# all extras
+all = ["clu-bridge[spacy]", "clu-bridge[dev]", "clu-bridge[doc]", "clu-bridge[demo]"]
+
+[tool.setuptools.package-dir]
+"clu.bridge" = "python/clu/bridge"
+
+# [tool.setuptools.packages]
+# find = {}  # Scan the project directory with the default parameters
+
+[tool.setuptools.package-data]
+# needed to ensure models are included in package/discoverable
+"*" = ["*.json", "vocab.txt", "*.pt", "*.png", "*.html", "*.yml", "*.yaml", "*.ico", "*.pdf", "*.png"]
+
+[tool.setuptools.dynamic]
+readme = {file = ["README.md"], content-type = "text/markdown"}
+# runnables
+[project.scripts]
+#clu-bridge = "clu.bridge.apps.convert_docs:main"
+
+# Minimum requirements for the build system to execute.
+[build-system]
+requires = ["setuptools>=67", "wheel"]
+build-backend = "setuptools.build_meta"
+
+# pytest
+[tool.pytest.ini_options]
+markers = [
+    "ci_only: marks tests to only be run in CI (deselect with '-m \"not ci_only\"')"
+]
+minversion = "7.0"
+addopts = "-v --cov=clu.bridge --cov-report html:docs/coverage"
+testpaths = [
+    "python/clu/bridge/tests",
+#    "python/clu/bridge/rest/tests"
+]
+
+# Configuration for Black.
 
 # NOTE: you have to use single-quoted strings in TOML for regular expressions.
 # It's the equivalent of r-strings in Python.  Multiline strings are treated as
 # verbose regular expressions by Black.  Use [ ] to denote a significant space
 # character.
-
 [tool.black]
 line-length = 88
 target-version = ['py38']
