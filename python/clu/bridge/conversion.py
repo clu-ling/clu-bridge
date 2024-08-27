@@ -28,7 +28,7 @@ class ConversionUtils:
         raise NotImplementedError(f"doc of type '{type(doc)}' not supported")
 
     @staticmethod
-    def to_odinson_document(doc: typing.Union[SpacyDocument, CluDocument], metadata: typing.List[Field]) -> CluDocument:
+    def to_odinson_document(doc: typing.Union[SpacyDocument, CluDocument], metadata: typing.List[Field] = []) -> CluDocument:
         clu_doc = doc
         if isinstance(doc, SpacyDocument):
             clu_doc = spacy.ConversionUtils.to_clu_document(doc)
